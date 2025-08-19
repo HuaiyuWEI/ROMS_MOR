@@ -1786,3 +1786,4 @@ generate_param_file(Nx - 2, Ny - 2, Nlayer, ...
 generate_run_script(node_num, account, user_name);
 generate_partit_script(core_num_x, core_num_y);   % writes ./Neptune_input/do_partit.sh (per your earlier setup)
 generate_makefile(6);                                 % writes ./Makefile, -j6 by default
+generate_ncjoin_script( account, user_name);
