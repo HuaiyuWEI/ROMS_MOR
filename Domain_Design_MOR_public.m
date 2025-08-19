@@ -10,6 +10,7 @@ clear all
 addpath(genpath('D:\OneDrive - University of California\Projects\Neptune\roms_tools_others'))
 addpath('D:\OneDrive - University of California\MATLAB Codes\Neptune')
 addpath('D:\OneDrive - University of California\MATLAB Codes\Neptune\Postprocess_V2')
+addpath('D:\OneDrive - University of California\MATLAB Codes\Neptune\Expanse_scripts')
 
 % Unit conversions and basic settings
 m1km = 1000;         % 1 km in meters
@@ -18,11 +19,10 @@ fontsize = 15;       % Default font size for plots
 LW = 1;              % Default line width
 
 
-
 %% Set parameters of the simulation
 
 % Define experiment name and create output directory
-expname ='MOR_Res4_hr2000_tanhSm_Fm075Fs80Ft10'
+expname ='test_Aug18_V2'
 output_dir = fullfile('E:\Data_ROMS\Neptune',expname);
 if ~exist(output_dir, 'dir')
     mkdir(output_dir)
@@ -32,7 +32,7 @@ cd(output_dir)
 
 % Forcing options: select one only
 use_randForc = 1;    % 1 = use random wind forcing
-use_wind = 0;        % 1 = use along-ridge wind forcing
+use_wind = 0;        % 1 = use along-ridge constant wind forcing
 
 if (use_randForc + use_wind > 1)
     error('Choose only one type of forcing: random or along-ridge wind.')
@@ -96,7 +96,10 @@ if dx == 4 * m1km
     Nx = 502;
     Ny = 252;
 end
+
 Nlayer = 80;
+
+
 
 
 %% generate the grid
@@ -370,6 +373,7 @@ ylabel('-depth  (m)');
 
 exportgraphics(gcf,'VerticalGrid.png','resolution',200)
 saveas(gcf,'VerticalGrid.fig')
+
 
 
 %%% Plot vertical cell thickness profile at slope center
@@ -1735,3 +1739,50 @@ netcdf.close(ncid);
 end
 
 
+%% generate other input/configuration files
+
+Simulation_period = (5*365+2)*s1day
+time_step = 180;
+core_num_x = 16;
+core_num_y = 8;
+node_num = core_num_x*core_num_y/128;
+active_tracer_num = 1;
+passive_tracer_num = 0;
+account = 'cla327';
+user_name = 'hwei1'
+
+
+% The input file for configuring the simulation
+generate_roms_namelist(...
+    ceil(Simulation_period./time_step), time_step, theta_s, theta_b, hc, ...
+    rho0,zob, alpha0*rho0, 1.0, 0.0, 1.0);
+
+% The generated cppdefs file is a default template.
+% Review and (un)comment CPP flags as needed.
+generate_cppdefs()
+
+% Forcing / diagnostics configs
+generate_forcing_config(0);  % use 1 to enable interpolation
+
+% Basic diagnostics:
+%   restart every year; snapshots daily; averages yearly
+generate_BasicDiag_file( ...
+    true, 365*s1day, 2, ...   % restart: enabled, period, nrpf
+    true, s1day, 100, ...     % snapshots: enabled, period, nrpf
+    true, 365*s1day, 5);      % averages:  enabled, period, nrpf
+
+% Extended diagnostics (averaged; set booleans as desired)
+generate_MoreDiag_file( ...
+    true, 365*s1day, 5, ...   % diag_avg, output_period, nrpf
+    true, true, true);        % diag_uv,  diag_trc,     diag_pflx
+
+% Domain/partition parameters (note: Nx-2, Ny-2 exclude halos/land?)
+generate_param_file(Nx - 2, Ny - 2, Nlayer, ...
+    core_num_x, core_num_y, ...
+    1, 1, ...                 % tile_x, tile_y or similar (adjust if needed)
+    active_tracer_num, passive_tracer_num);
+
+% Run & partition scripts / Makefile
+generate_run_script(node_num, account, user_name);
+generate_partit_script(core_num_x, core_num_y);   % writes ./Neptune_input/do_partit.sh (per your earlier setup)
+generate_makefile(6);                                 % writes ./Makefile, -j6 by default
