@@ -1,6 +1,6 @@
 # Idealized UCLA-ROMS Simulation Generator
 
-`NewExp_xxx.m` are MATLAB scripts that generate all necessary configuration and input files to run an idealized UCLA-ROMS simulation.
+`NewExp_xxx.m` contains MATLAB scripts that generate all required configuration and input files for running idealized UCLA-ROMS simulations. For new users, NewExp_Neptune_MOR.m is a good starting point for exploring the workflow.
 
 ## Cluster Configuration
 
