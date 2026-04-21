@@ -1,4 +1,4 @@
-function generate_cppdefs(filename)
+function generate_cppdefs_channel(filename)
     if nargin < 1 || isempty(filename)
         filename = 'cppdefs.opt';
     end
@@ -30,10 +30,10 @@ function generate_cppdefs(filename)
     fprintf(fid, '# define ADV_ISONEUTRAL\n');
     fprintf(fid, '# define DIAGNOSTICS\n\n');
 
-    fprintf(fid, '# undef TNUDG_Huaiyu\n\n');
-    fprintf(fid, '# undef UVNUDG_Huaiyu\n\n');
+    fprintf(fid, '# define TNUDG_Huaiyu\n\n');
+    fprintf(fid, '# define UVNUDG_Huaiyu\n\n');
     fprintf(fid, '# define ignore_leap\n\n');
-    fprintf(fid, '/* # undef SPONGE */\n\n');
+
     
     % Equation of State (commented out)
     fprintf(fid, '        /* Equation of State */\n');
@@ -64,7 +64,7 @@ function generate_cppdefs(filename)
     % Boundaries
     fprintf(fid, '        /* Boundaries */\n');
     fprintf(fid, '# define NS_PERIODIC\n');
-    fprintf(fid, '# define EW_PERIODIC\n\n');
+    fprintf(fid, '# undef EW_PERIODIC\n\n');
 
     % Output & Restart
     fprintf(fid, '        /* Output Options */\n');

@@ -71,7 +71,7 @@ function generate_ncjoin_script(account_name,user_name,filename)
     fprintf(fid, 'ncjoin -d neptune_his.2007*.*.nc &\n');
     fprintf(fid, 'ncjoin -d neptune_his.2008*.*.nc &\n');
     fprintf(fid, 'ncjoin -d neptune_his.2009*.*.nc &\n');
-
+    fprintf(fid, 'wait\n');
     fclose(fid);
 
     % Make executable on Unix/macOS

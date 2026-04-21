@@ -36,6 +36,9 @@ function generate_makefile(num_cpu)
     fprintf(fid, '\t@rsync -a $(ROMS_ROOT)/src/Make.depend Compile\n');
     fprintf(fid, '\t@rsync -a $(ROMS_ROOT)/src/Makefile Compile\n');
     fprintf(fid, '\t@rm Compile/*.f 2>/dev/null || :\n');
+    fprintf(fid, '\tcp ../../Work/*.F ./Compile 2>/dev/null || :\n');
+    fprintf(fid, '\tcp ../../Work/*.h ./Compile 2>/dev/null || :\n');
+    fprintf(fid, '\tcp ../../Work/*.opt ./Compile 2>/dev/null || :\n');
     fprintf(fid, '\tcp -p *.h *.F *.opt Makedefs.inc Compile 2>/dev/null || :\n');
     fprintf(fid, '\tcd Compile; make depend 2>/dev/null || :\n');
     fprintf(fid, '\tcd Compile; make -j%d; mv roms ..\n\n', num_cpu);
@@ -60,6 +63,12 @@ function generate_makefile(num_cpu)
     fprintf(fid, '\t@cd $(ROMS_ROOT)/Examples/Rivers_real     ; make compile_clean\n');
     fprintf(fid, '\t@cd $(ROMS_ROOT)/Examples/Tracers_passive ; make compile_clean\n');
     fprintf(fid, '\t@cd $(ROMS_ROOT)/Examples/WEC_real        ; make compile_clean\n');
+    
+    fprintf(fid, 'copy_to_Work_dir:\n');
+    fprintf(fid, '\tcp -p *.F *.h *.in *.sh ../../Work 2>/dev/null || :\n\n');
+
+    fprintf(fid, 'nhmg:\n');
+    fprintf(fid, '\tcd $(ROMS_ROOT)/NHMG/src; make clean; cd .. ; make\n\n');
 
     fclose(fid);
     fprintf('Makefile written in current directory with -j%d\n', num_cpu);

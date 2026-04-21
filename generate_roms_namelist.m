@@ -1,12 +1,12 @@
 function generate_roms_namelist(...
     NTIMES, dt, THETA_S, THETA_B, hc, ...
-    rho0,Zob, Tcoef, T0, Scoef, S0, ...
+    rho0,V_SPONGE,Zob, Tcoef, T0, Scoef, S0, ...
     filename)
 
-    if nargin < 11
+    if nargin < 12
         error('All 11 arguments are required.');
     end
-    if nargin < 12
+    if nargin < 13
         filename = 'neptune.in';
     end
 
@@ -48,6 +48,10 @@ function generate_roms_namelist(...
     % Reference density (customizable)
     fprintf(fid, 'rho0:\n');
     fprintf(fid, '      %.6g\n\n', rho0);
+    
+    % sponge layer (customizable)
+    fprintf(fid, 'v_sponge:  V_SPONGE [m^2/sec]\n');
+    fprintf(fid, '           %.2f\n\n', V_SPONGE);
 
     % Tracer diffusivity
     fprintf(fid, 'tracer_diff2: TNU2(1:NT)           [m^2/sec for all]\n');
