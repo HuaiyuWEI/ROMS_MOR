@@ -6,6 +6,8 @@ function generate_partit_script(core_num_x, core_num_y, filename)
     if nargin < 3 || isempty(filename)
         filename = 'do_partit.sh';
     end
+    validateattributes(core_num_x, {'numeric'}, {'scalar', 'integer', 'positive'}, mfilename, 'core_num_x');
+    validateattributes(core_num_y, {'numeric'}, {'scalar', 'integer', 'positive'}, mfilename, 'core_num_y');
 
     % Ensure output dir exists
     outdir = fullfile('.', 'Neptune_input');
@@ -17,15 +19,11 @@ function generate_partit_script(core_num_x, core_num_y, filename)
     filepath = fullfile(outdir, filename);
 
     % Write script
-    fid = fopen(filepath, 'w');
-    if fid == -1
-        error('Cannot open "%s" for writing.', filepath);
-    end
+    [fid, cleaner] = open_text_file_for_write(filepath);
     fprintf(fid, '#!/bin/bash\n\n');
     fprintf(fid, 'partit %d %d neptune_grid.nc neptune_init.nc neptune_frc.nc\n', core_num_x, core_num_y);
-    fclose(fid);
+    clear cleaner;
 
-    % Make executable on Unix/macOS only (Windows doesn't support +x via fileattrib)
     if isunix || ismac
         fileattrib(filepath, '+x', 'a');
     end

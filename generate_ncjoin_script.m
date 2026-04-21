@@ -1,16 +1,23 @@
 function generate_ncjoin_script(account_name,user_name,filename)
-% generate_ncjoin_script([filename])
+%GENERATE_NCJOIN_SCRIPT Write the ncjoin SLURM script in the current directory.
 % Writes the requested ncjoin SLURM script in the current directory.
-% Default: 'ncjoin_mpi50.sh'
+% History files are joined in parallel by detected calendar year so the
+% script can use multiple cores without hardcoding a fixed year list.
+% Default filename: 'do_ncjoin'
+
+    if nargin < 1 || isempty(account_name)
+        account_name = '';
+    end
+
+    if nargin < 2 || isempty(user_name)
+        user_name = '';
+    end
 
     if nargin < 3 || isempty(filename)
         filename = 'do_ncjoin';
     end
 
-    fid = fopen(filename, 'w');
-    if fid == -1
-        error('Cannot open "%s" for writing.', filename);
-    end
+    [fid, cleaner] = open_text_file_for_write(filename);
 
     fprintf(fid, '#!/bin/bash\n');
     fprintf(fid, '#SBATCH --job-name="ncj_mpi50"\n\n');
@@ -40,19 +47,28 @@ function generate_ncjoin_script(account_name,user_name,filename)
     fprintf(fid, '#            for total memory required use: #SBATCH --mem=256G\n');
     fprintf(fid, '#         or for memory per cores      use: #SBATCH --mem-per-cpu=2G\n');
     fprintf(fid, '#SBATCH --mem=64G\n');
-    fprintf(fid, '#SBATCH --account=%s\n', account_name);
+    if ~isempty(account_name)
+        fprintf(fid, '#SBATCH --account=%s\n', account_name);
+    else
+        fprintf(fid, '##SBATCH --account=<set-your-account-if-required>\n');
+    end
     fprintf(fid, '#SBATCH --export=ALL\n');
     fprintf(fid, '#       Time duration requested for run:\n');
     fprintf(fid, '#SBATCH -t 24:00:00\n');
-    fprintf(fid, '#SBATCH --mail-user=%s\n', user_name);
-    fprintf(fid, '#SBATCH --mail-type=ALL\n\n');
+    if ~isempty(user_name)
+        fprintf(fid, '#SBATCH --mail-user=%s\n', user_name);
+        fprintf(fid, '#SBATCH --mail-type=ALL\n');
+    else
+        fprintf(fid, '# Email notifications disabled. Set user_name in MATLAB to enable them.\n');
+    end
+    fprintf(fid, '\n');
 
     fprintf(fid, '#-----------------------------------------------------------------\n\n');
 
     fprintf(fid, '# Flags needed for mvapich2:\n');
     fprintf(fid, 'export MV2_USE_RDMA_CM=0\n');
     fprintf(fid, 'export MV2_IBA_HCA=mlx5_2\n');
-    fprintf(fid, 'export MV2 DEFAULT PORT=1\n\n');
+    fprintf(fid, 'export MV2_DEFAULT_PORT=1\n\n');
 
     fprintf(fid, 'module purge\n');
     fprintf(fid, 'module load slurm\n');
@@ -61,20 +77,23 @@ function generate_ncjoin_script(account_name,user_name,filename)
     fprintf(fid, 'module load netcdf-fortran/4.5.3\n');
     fprintf(fid, 'ncjoin -d neptune_avg.*.*.nc &\n');
     fprintf(fid, 'ncjoin -d neptune_dia.*.*.nc &\n');
-    fprintf(fid, 'ncjoin -d neptune_his.2000*.*.nc &\n');
-    fprintf(fid, 'ncjoin -d neptune_his.2001*.*.nc &\n');
-    fprintf(fid, 'ncjoin -d neptune_his.2002*.*.nc &\n');
-    fprintf(fid, 'ncjoin -d neptune_his.2003*.*.nc &\n');
-    fprintf(fid, 'ncjoin -d neptune_his.2004*.*.nc &\n');
-    fprintf(fid, 'ncjoin -d neptune_his.2005*.*.nc &\n');
-    fprintf(fid, 'ncjoin -d neptune_his.2006*.*.nc &\n');
-    fprintf(fid, 'ncjoin -d neptune_his.2007*.*.nc &\n');
-    fprintf(fid, 'ncjoin -d neptune_his.2008*.*.nc &\n');
-    fprintf(fid, 'ncjoin -d neptune_his.2009*.*.nc &\n');
+    fprintf(fid, 'shopt -s nullglob\n');
+    fprintf(fid, 'declare -A history_years=()\n');
+    fprintf(fid, 'for history_file in neptune_his.*.*.nc; do\n');
+    fprintf(fid, '    stamp="${history_file#neptune_his.}"\n');
+    fprintf(fid, '    stamp="${stamp%%.*}"\n');
+    fprintf(fid, '    year="${stamp:0:4}"\n');
+    fprintf(fid, '    if [[ "${year}" =~ ^[0-9]{4}$ ]]; then\n');
+    fprintf(fid, '        history_years["${year}"]=1\n');
+    fprintf(fid, '    fi\n');
+    fprintf(fid, 'done\n');
+    fprintf(fid, '\n');
+    fprintf(fid, 'for year in "${!history_years[@]}"; do\n');
+    fprintf(fid, '    ncjoin -d "neptune_his.${year}*.*.nc" &\n');
+    fprintf(fid, 'done\n');
     fprintf(fid, 'wait\n');
-    fclose(fid);
+    clear cleaner;
 
-    % Make executable on Unix/macOS
     if isunix || ismac
         fileattrib(filename, '+x', 'a');
     end

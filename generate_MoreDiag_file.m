@@ -3,6 +3,9 @@ function generate_MoreDiag_file( ...
     diag_uv, diag_trc, diag_pflx, ...
     filename)
 
+    if nargin < 6
+        error('Six inputs are required before the optional filename.');
+    end
     if nargin < 7 || isempty(filename)
         filename = 'diagnostics.opt';
     end
@@ -17,10 +20,10 @@ function generate_MoreDiag_file( ...
     tf = {'.false.','.true.'};
     tfstr = @(x) tf{1 + (x~=0)};   % returns '.false.' or '.true.'
 
-    fid = fopen(filename, 'w');
-    if fid == -1
-        error('Cannot open "%s" for writing.', filename);
-    end
+    validateattributes(output_period, {'numeric'}, {'scalar', 'positive'}, mfilename, 'output_period');
+    validateattributes(nrpf, {'numeric'}, {'scalar', 'integer', 'positive'}, mfilename, 'nrpf');
+
+    [fid, cleaner] = open_text_file_for_write(filename);
 
     fprintf(fid, '      ! ***************************************************************\n');
     fprintf(fid, '      ! User inputs:\n');
@@ -58,6 +61,6 @@ function generate_MoreDiag_file( ...
     fprintf(fid, '      ! End of user inputs\n');
     fprintf(fid, '      ! ***************************************************************\n');
 
-    fclose(fid);
+    clear cleaner;
     fprintf('Diagnostics config file written to "%s"\n', filename);
 end

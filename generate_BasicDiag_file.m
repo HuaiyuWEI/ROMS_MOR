@@ -4,11 +4,18 @@ function generate_BasicDiag_file(...
     wrt_avg, per_avg, nrpf_avg, ...
     filename)
 
-    if nargin < 12
+    if nargin < 9
+        error('Nine inputs are required before the optional filename.');
+    end
+    if nargin < 10 || isempty(filename)
         filename = 'ocean_vars.opt';
     end
 
-    fid = fopen(filename, 'w');
+    wrt_rst = logical(wrt_rst);
+    wrt_his = logical(wrt_his);
+    wrt_avg = logical(wrt_avg);
+
+    [fid, cleaner] = open_text_file_for_write(filename);
     fprintf(fid, '      ! ****************************************************************\n');
     fprintf(fid, '      ! user inputs\n');
 
@@ -57,12 +64,12 @@ function generate_BasicDiag_file(...
     fprintf(fid, '     &                     wrt_avg_Hbls=.true.,\n');
     fprintf(fid, '     &                     wrt_avg_Hbbl=.true.\n\n');
 
-    % Final code check flag
+    % Final code-check flag
     fprintf(fid, '      logical :: code_check = .false.\n');
     fprintf(fid, '      ! end user inputs\n');
     fprintf(fid, '      ! ****************************************************************\n');
 
-    fclose(fid);
+    clear cleaner;
     fprintf('Output configuration file written to "%s"\n', filename);
 end
 

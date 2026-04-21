@@ -4,12 +4,26 @@
 
 
 close all
-clear all
+clearvars
 
-% Add necessary paths for ROMS tools and postprocessing scripts
-addpath(genpath('D:\OneDrive - University of California\Projects\Neptune\roms_tools_others'))
-addpath('D:\OneDrive - University of California\MATLAB Codes\Neptune\NewExp_Expanse')
-addpath(genpath('D:\OneDrive - University of California\MATLAB Codes\Neptune\PostProcess_2026'))
+% Shared defaults for portable public use.
+script_dir = fileparts(mfilename('fullpath'));
+addpath(script_dir);
+config = newexp_defaults(mfilename('fullpath'));
+output_root = config.output_root;
+
+if ~isempty(config.roms_tools_dir)
+    if exist(config.roms_tools_dir, 'dir') ~= 7
+        error('Configured roms_tools_dir does not exist: %s', config.roms_tools_dir);
+    end
+    addpath(genpath(config.roms_tools_dir));
+end
+
+if ~isempty(config.postprocess_dir) && exist(config.postprocess_dir, 'dir') == 7
+    addpath(genpath(config.postprocess_dir));
+else
+    warning('PostProcess_2026 directory not found at "%s". Continuing without it on the MATLAB path.', config.postprocess_dir);
+end
 
 % Unit conversions and basic settings
 m1km = 1000;         % 1 km in meters
@@ -21,12 +35,12 @@ LW = 1;              % Default line width
 %% Set parameters of the simulation
 
 % Define experiment name and create output directory
-expname ='MOR_Res4_hr2000_tanhSm_Fm075Fs80Ft10_SurfKPP'
-output_dir = fullfile('E:\Data_ROMS\Neptune',expname);
+expname ='MOR_Res4_hr2000_tanhSm_Fm075Fs80Ft10_SurfKPP';
+output_dir = fullfile(output_root, expname);
 if ~exist(output_dir, 'dir')
-    mkdir(output_dir)
+    mkdir(output_dir);
 end
-cd(output_dir)
+cd(output_dir);
 
 
 % Forcing options: select one only
@@ -1168,153 +1182,153 @@ dim = {finfo.Variables.Size};
 
 
 % write data into the empty netcdf file
-ivar=find(strcmp(varname,'spherical'))
-varname{ivar}
+ivar = find(strcmp(varname,'spherical'));
+varname{ivar};
 clear tmp;tmp='F';
 ncwrite(filename,varname{ivar},tmp);
 tmp2=ncread(filename,varname{ivar})-tmp;
 if length(find(tmp2~=0))>=1
-    error('Check ', [varname{ivar},' data'])
+    error(['Check ' varname{ivar} ' data']);
 end
 
-ivar=find(strcmp(varname,'xl'))
-varname{ivar}
+ivar = find(strcmp(varname,'xl'));
+varname{ivar};
 clear tmp;tmp=Lx*ones(dim{ivar});
 ncwrite(filename,varname{ivar},tmp);
 tmp2=ncread(filename,varname{ivar})-tmp;
 if length(find(tmp2~=0))>=1
-    error('Check ', [varname{ivar},' data'])
+    error(['Check ' varname{ivar} ' data']);
 end
 
-ivar=find(strcmp(varname,'el'))
-varname{ivar}
+ivar = find(strcmp(varname,'el'));
+varname{ivar};
 clear tmp;tmp=Ly*ones(dim{ivar});
 ncwrite(filename,varname{ivar},tmp);
 tmp2=ncread(filename,varname{ivar})-tmp;
 if length(find(tmp2~=0))>=1
-    error('Check ', [varname{ivar},' data'])
+    error(['Check ' varname{ivar} ' data']);
 end
 
-ivar=find(strcmp(varname,'f'))
-varname{ivar}
+ivar = find(strcmp(varname,'f'));
+varname{ivar};
 clear tmp;tmp=f_rho;
 ncwrite(filename,varname{ivar},tmp);
 tmp2=ncread(filename,varname{ivar})-tmp;
 if length(find(tmp2~=0))>=1
-    error('Check ', [varname{ivar},' data'])
+    error(['Check ' varname{ivar} ' data']);
 end
 
-ivar=find(strcmp(varname,'h'))
-varname{ivar}
+ivar = find(strcmp(varname,'h'));
+varname{ivar};
 clear tmp;tmp=-h_rho; % h should be positive in roms
 tmp(tmp==0)=100; % h=0 causes nan in roms ??
 ncwrite(filename,varname{ivar},tmp);
 tmp2=ncread(filename,varname{ivar})-tmp;
 if length(find(tmp2~=0))>=1
-    error('Check ', [varname{ivar},' data'])
+    error(['Check ' varname{ivar} ' data']);
 end
 
 
 list=fieldnames(G);
 for i=1:length(list)
-    ivar=find(strcmp(varname,list{i}))
-    varname{ivar}
+    ivar = find(strcmp(varname,list{i}));
+    varname{ivar};
     clear tmp*;eval(['tmp=G.',list{i},';']);
     ncwrite(filename,varname{ivar},tmp);
     tmp2=ncread(filename,varname{ivar})-tmp;
     if length(find(tmp2~=0))>=1
-        error('Check ', [varname{ivar},' data'])
+        error(['Check ' varname{ivar} ' data']);
     end
 end
 
 listmask={'mask_rho'};
 for i=1:length(listmask)
-    ivar=find(strcmp(varname,listmask{i}))
-    varname{ivar}
+    ivar = find(strcmp(varname,listmask{i}));
+    varname{ivar};
     clear tmp*;eval(['tmp=',listmask{i},';']);
     ncwrite(filename,varname{ivar},tmp);
     tmp2=ncread(filename,varname{ivar})-tmp;
     if length(find(tmp2~=0))>=1
-        error('Check ', [varname{ivar},' data'])
+        error(['Check ' varname{ivar} ' data']);
     end
 end
 
 if(restoring)
 
-    ivar=find(strcmp(varname,'Tcline'))
-    varname{ivar}
+    ivar = find(strcmp(varname,'Tcline'));
+    varname{ivar};
     clear tmp;tmp=hc;
     ncwrite(filename,varname{ivar},tmp);
     tmp2=ncread(filename,varname{ivar})-tmp;
     if length(find(tmp2~=0))>=1
-        error('Check ', [varname{ivar},' data'])
+        error(['Check ' varname{ivar} ' data']);
     end
 
     %
-    ivar=find(strcmp(varname,'theta_b'))
-    varname{ivar}
+    ivar = find(strcmp(varname,'theta_b'));
+    varname{ivar};
     clear tmp;tmp=theta_b;
     ncwrite(filename,varname{ivar},tmp);
     tmp2=ncread(filename,varname{ivar})-tmp;
     if length(find(tmp2~=0))>=1
-        error('Check ', [varname{ivar},' data'])
+        error(['Check ' varname{ivar} ' data']);
     end
 
     %
-    ivar=find(strcmp(varname,'theta_s'))
-    varname{ivar}
+    ivar = find(strcmp(varname,'theta_s'));
+    varname{ivar};
     clear tmp;tmp=theta_s;
     ncwrite(filename,varname{ivar},tmp);
     tmp2=ncread(filename,varname{ivar})-tmp;
     if length(find(tmp2~=0))>=1
-        error('Check ', [varname{ivar},' data'])
+        error(['Check ' varname{ivar} ' data']);
     end
 
-    ivar=find(strcmp(varname,'hc'))
-    varname{ivar}
+    ivar = find(strcmp(varname,'hc'));
+    varname{ivar};
     clear tmp;tmp=hc;
     ncwrite(filename,varname{ivar},tmp);
     tmp2=ncread(filename,varname{ivar})-tmp;
     if length(find(tmp2~=0))>=1
-        error('Check ', [varname{ivar},' data'])
+        error(['Check ' varname{ivar} ' data']);
     end
 
 
-    ivar=find(strcmp(varname,'Cs_w'))
-    varname{ivar}
+    ivar = find(strcmp(varname,'Cs_w'));
+    varname{ivar};
     clear tmp;tmp=Cs_w';
     ncwrite(filename,varname{ivar},tmp);
     tmp2=ncread(filename,varname{ivar})-tmp;
     if length(find(tmp2~=0))>=1
-        error('Check ', [varname{ivar},' data'])
+        error(['Check ' varname{ivar} ' data']);
     end
 
-    ivar=find(strcmp(varname,'Cs_r'))
-    varname{ivar}
+    ivar = find(strcmp(varname,'Cs_r'));
+    varname{ivar};
     clear tmp;tmp=Cs_r';
     ncwrite(filename,varname{ivar},tmp);
     tmp2=ncread(filename,varname{ivar})-tmp;
     if length(find(tmp2~=0))>=1
-        error('Check ', [varname{ivar},' data'])
+        error(['Check ' varname{ivar} ' data']);
     end
 
 
-    ivar=find(strcmp(varname,'t_targ'))
-    varname{ivar}
+    ivar = find(strcmp(varname,'t_targ'));
+    varname{ivar};
     clear tmp;tmp=t_targ;
     ncwrite(filename,varname{ivar},tmp);
     tmp2=ncread(filename,varname{ivar})-tmp;
     if length(find(tmp2~=0))>=1
-        error('Check ', [varname{ivar},' data'])
+        error(['Check ' varname{ivar} ' data']);
     end
 
-    ivar=find(strcmp(varname,'nudgc'))
-    varname{ivar}
+    ivar = find(strcmp(varname,'nudgc'));
+    varname{ivar};
     clear tmp;tmp=nudgc;
     ncwrite(filename,varname{ivar},tmp);
     tmp2=ncread(filename,varname{ivar})-tmp;
     if length(find(tmp2~=0))>=1
-        error('Check ', [varname{ivar},' data'])
+        error(['Check ' varname{ivar} ' data']);
     end
 
 
@@ -1401,19 +1415,19 @@ dim = {finfo.Variables.Size};
 ncdisp(filename)
 
 
-ivar=find(strcmp(varname,'frc_time'))
-varname{ivar}
+ivar = find(strcmp(varname,'frc_time'));
+varname{ivar};
 clear tmp;tmp=[0:1:Nfrc-1]';
 tmp = single(tmp);
 ncwrite(filename,varname{ivar},tmp);
 tmp2=ncread(filename,varname{ivar})-tmp;
 if length(find(tmp2~=0))>=1
-    error('Check ', [varname{ivar},' data'])
+    error(['Check ' varname{ivar} ' data']);
 end
 
 
-ivar=find(strcmp(varname,'sustr'))
-varname{ivar}
+ivar = find(strcmp(varname,'sustr'));
+varname{ivar};
 clear tmp;
 if(spindown)
     tmp=zeros(dim{ivar});
@@ -1424,12 +1438,12 @@ tmp = single(tmp);
 ncwrite(filename,varname{ivar},tmp);
 % tmp2=ncread(filename,varname{ivar})-tmp;
 % if length(find(tmp2~=0))>=1
-%     error('Check ', [varname{ivar},' data'])
+%     error(['Check ' varname{ivar} ' data']);
 % end
 
 
-ivar=find(strcmp(varname,'svstr'))
-varname{ivar}
+ivar = find(strcmp(varname,'svstr'));
+varname{ivar};
 clear tmp;
 if(spindown)
     tmp=zeros(dim{ivar});
@@ -1440,21 +1454,21 @@ tmp = single(tmp);
 ncwrite(filename,varname{ivar},tmp);
 % tmp2=ncread(filename,varname{ivar})-tmp;
 % if length(find(tmp2~=0))>=1
-%     error('Check ', [varname{ivar},' data'])
+%     error(['Check ' varname{ivar} ' data']);
 % end
 
 
 listfrc={'shflux','swflux','SST','SSS','dQdSST','swrad'};
 
 for i=1:length(listfrc)
-    ivar=find(strcmp(varname,listfrc{i}))
-    varname{ivar}
+    ivar = find(strcmp(varname,listfrc{i}));
+    varname{ivar};
     clear tmp;tmp=zeros(dim{ivar});
     tmp = single(tmp);
     ncwrite(filename,varname{ivar},tmp);
     % tmp2=ncread(filename,varname{ivar})-tmp;
     % if length(find(tmp2~=0))>=1
-    %     error('Check ', [varname{ivar},' data'])
+    %     error(['Check ' varname{ivar} ' data']);
     % end
 end
 
@@ -1575,8 +1589,8 @@ finfo = ncinfo(filename);
 varname = {finfo.Variables.Name};
 dim = {finfo.Variables.Size};
 
-ivar=find(strcmp(varname,'temp'))
-varname{ivar}
+ivar = find(strcmp(varname,'temp'));
+varname{ivar};
 clear tmp;tmp=single(T_init);
 ncwrite(filename,varname{ivar},tmp);
 tmp2=ncread(filename,varname{ivar})-tmp;
@@ -1584,8 +1598,8 @@ if length(find(tmp2~=0))>=1
     error(['Check ', varname{ivar},' data'])
 end
 
-ivar=find(strcmp(varname,'salt'))
-varname{ivar}
+ivar = find(strcmp(varname,'salt'));
+varname{ivar};
 clear tmp;tmp=0*T_init;
 ncwrite(filename,varname{ivar},tmp);
 tmp2=ncread(filename,varname{ivar})-tmp;
@@ -1593,8 +1607,8 @@ if length(find(tmp2~=0))>=1
     error(['Check ', varname{ivar},' data'])
 end
 
-ivar=find(strcmp(varname,'u'))
-varname{ivar}
+ivar = find(strcmp(varname,'u'));
+varname{ivar};
 clear tmp;tmp=zeros(dim{ivar});
 ncwrite(filename,varname{ivar},tmp);
 tmp2=ncread(filename,varname{ivar})-tmp;
@@ -1602,8 +1616,8 @@ if length(find(tmp2~=0))>=1
     error(['Check ', varname{ivar},' data'])
 end
 
-ivar=find(strcmp(varname,'v'))
-varname{ivar}
+ivar = find(strcmp(varname,'v'));
+varname{ivar};
 clear tmp;tmp=zeros(dim{ivar});
 ncwrite(filename,varname{ivar},tmp);
 tmp2=ncread(filename,varname{ivar})-tmp;
@@ -1612,8 +1626,8 @@ if length(find(tmp2~=0))>=1
 end
 
 
-ivar=find(strcmp(varname,'hc'))
-varname{ivar}
+ivar = find(strcmp(varname,'hc'));
+varname{ivar};
 clear tmp;tmp=hc;
 ncwrite(filename,varname{ivar},tmp);
 tmp2=ncread(filename,varname{ivar})-tmp;
@@ -1621,8 +1635,8 @@ if length(find(tmp2~=0))>=1
     error(['Check ', varname{ivar},' data'])
 end
 %
-ivar=find(strcmp(varname,'Tcline'))
-varname{ivar}
+ivar = find(strcmp(varname,'Tcline'));
+varname{ivar};
 clear tmp;tmp=hc;
 ncwrite(filename,varname{ivar},tmp);
 tmp2=ncread(filename,varname{ivar})-tmp;
@@ -1630,8 +1644,8 @@ if length(find(tmp2~=0))>=1
     error(['Check ', varname{ivar},' data'])
 end
 %
-ivar=find(strcmp(varname,'theta_b'))
-varname{ivar}
+ivar = find(strcmp(varname,'theta_b'));
+varname{ivar};
 clear tmp;tmp=theta_b;
 ncwrite(filename,varname{ivar},tmp);
 tmp2=ncread(filename,varname{ivar})-tmp;
@@ -1639,8 +1653,8 @@ if length(find(tmp2~=0))>=1
     error(['Check ', varname{ivar},' data'])
 end
 %
-ivar=find(strcmp(varname,'theta_s'))
-varname{ivar}
+ivar = find(strcmp(varname,'theta_s'));
+varname{ivar};
 clear tmp;tmp=theta_s;
 ncwrite(filename,varname{ivar},tmp);
 tmp2=ncread(filename,varname{ivar})-tmp;
@@ -1649,8 +1663,8 @@ if length(find(tmp2~=0))>=1
 end
 
 
-ivar=find(strcmp(varname,'ubar'))
-varname{ivar}
+ivar = find(strcmp(varname,'ubar'));
+varname{ivar};
 clear tmp;tmp=0*ones(dim{ivar});
 ncwrite(filename,varname{ivar},tmp);
 tmp2=ncread(filename,varname{ivar})-tmp;
@@ -1658,8 +1672,8 @@ if length(find(tmp2~=0))>=1
     error(['Check ', varname{ivar},' data'])
 end
 
-ivar=find(strcmp(varname,'vbar'))
-varname{ivar}
+ivar = find(strcmp(varname,'vbar'));
+varname{ivar};
 clear tmp;tmp=0*ones(dim{ivar});
 ncwrite(filename,varname{ivar},tmp);
 tmp2=ncread(filename,varname{ivar})-tmp;
@@ -1668,8 +1682,8 @@ if length(find(tmp2~=0))>=1
 end
 
 
-ivar=find(strcmp(varname,'zeta'))
-varname{ivar}
+ivar = find(strcmp(varname,'zeta'));
+varname{ivar};
 clear tmp;tmp=0*ones(dim{ivar});
 ncwrite(filename,varname{ivar},tmp);
 tmp2=ncread(filename,varname{ivar})-tmp;
@@ -1677,8 +1691,8 @@ if length(find(tmp2~=0))>=1
     error(['Check ', varname{ivar},' data'])
 end
 
-ivar=find(strcmp(varname,'ocean_time'))
-varname{ivar}
+ivar = find(strcmp(varname,'ocean_time'));
+varname{ivar};
 clear tmp;tmp=0;
 ncwrite(filename,varname{ivar},tmp);
 tmp2=ncread(filename,varname{ivar})-tmp;
@@ -1686,8 +1700,8 @@ if length(find(tmp2~=0))>=1
     error(['Check ', varname{ivar},' data'])
 end
 
-ivar=find(strcmp(varname,'Cs_w'))
-varname{ivar}
+ivar = find(strcmp(varname,'Cs_w'));
+varname{ivar};
 clear tmp;tmp=Cs_w';
 ncwrite(filename,varname{ivar},tmp);
 tmp2=ncread(filename,varname{ivar})-tmp;
@@ -1695,8 +1709,8 @@ if length(find(tmp2~=0))>=1
     error(['Check ', varname{ivar},' data'])
 end
 
-ivar=find(strcmp(varname,'Cs_r'))
-varname{ivar}
+ivar = find(strcmp(varname,'Cs_r'));
+varname{ivar};
 clear tmp;tmp=Cs_r';
 ncwrite(filename,varname{ivar},tmp);
 tmp2=ncread(filename,varname{ivar})-tmp;
@@ -1739,9 +1753,9 @@ for varid = 0:numvars-1
 end
 
 if ind~=0
-    fprintf('Some varibles in "%s" contain NaN values.\n',ncfile);
+    fprintf('Some variables in "%s" contain NaN values.\n',ncfile);
 else
-    fprintf('All varibles in "%s" do not contain NaN values.\n',ncfile);
+    fprintf('All variables in "%s" do not contain NaN values.\n',ncfile);
 end
 % Close the NetCDF file
 netcdf.close(ncid);
@@ -1757,8 +1771,11 @@ core_num_y = 8;
 node_num = core_num_x*core_num_y/128;
 active_tracer_num = 1;
 passive_tracer_num = 0;
-account = 'cla327';
-user_name = 'hwei1'
+% Leave these blank in newexp_defaults.m if you want to set them manually
+% after generation on your own cluster.
+account = config.slurm_account;
+user_name = config.slurm_email;
+restart_stop_year = 2009;
 
 ndig = 1;
 Simulation_period = 365*s1day;
@@ -1794,7 +1811,7 @@ generate_param_file(Nx - 2, Ny - 2, Nlayer, ...
     active_tracer_num, passive_tracer_num);
 
 % Run & partition scripts / Makefile
-generate_run_script(node_num, account, user_name, 'run_roms_auto',2009);
+generate_run_script(node_num, account, user_name, 'run_roms_auto', restart_stop_year);
 generate_partit_script(core_num_x, core_num_y);   % writes ./Neptune_input/do_partit.sh (per your earlier setup)
 generate_makefile(6);                                 % writes ./Makefile, -j6 by default
 generate_ncjoin_script( account, user_name);

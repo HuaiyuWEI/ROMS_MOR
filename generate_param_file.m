@@ -1,9 +1,14 @@
 function generate_param_file(LLm, MMm, N, NP_XI, NP_ETA, NSUB_X, NSUB_E, nt, nt_passive, filename)
+    if nargin < 9
+        error('Nine inputs are required before the optional filename.');
+    end
     if nargin < 10
         filename = 'param.opt';  % default filename
     end
 
-    fid = fopen(filename, 'w');
+    validateattributes([LLm, MMm, N, NP_XI, NP_ETA, NSUB_X, NSUB_E, nt, nt_passive], ...
+        {'numeric'}, {'integer', 'nonnegative'}, mfilename);
+    [fid, cleaner] = open_text_file_for_write(filename);
 
     fprintf(fid, '! Parameter options file\n\n');
 
@@ -11,7 +16,7 @@ function generate_param_file(LLm, MMm, N, NP_XI, NP_ETA, NSUB_X, NSUB_E, nt, nt_
     fprintf(fid, '!----------- -- -------- ---- --- ----- -----------\n');
     fprintf(fid, '! LLm   Number of the internal points of the PHYSICAL grid in XI-\n');
     fprintf(fid, '! MMm   and ETA-directions, excluding physical side boundary points,\n');
-    fprintf(fid, '!       peroodic ghost points, and MPI-margins (if any).\n\n');
+    fprintf(fid, '!       periodic ghost points, and MPI margins (if any).\n\n');
 
     fprintf(fid, '! Domain subdivision parameters:\n');
     fprintf(fid, '!------- ----------- -----------\n');
@@ -28,7 +33,6 @@ function generate_param_file(LLm, MMm, N, NP_XI, NP_ETA, NSUB_X, NSUB_E, nt, nt_
     fprintf(fid, '      integer, parameter :: nt = %d\n', nt);
     fprintf(fid, '      integer, parameter :: nt_passive = %d\n\n', nt_passive);
 
-
-    fclose(fid);
+    clear cleaner;
     fprintf('Parameter file written to "%s"\n', filename);
 end

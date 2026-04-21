@@ -1,17 +1,15 @@
 function generate_makefile(num_cpu)
-% write_makefile([num_cpu])
+%GENERATE_MAKEFILE Generate a ROMS Makefile in the current directory.
 % Generate a Makefile in the current directory.
-% num_cpu = number of parallel num_cpu for "make -j" (default = 6)
+% num_cpu = number of parallel workers for "make -j" (default = 6)
 
     if nargin < 1 || isempty(num_cpu)
         num_cpu = 6;
     end
+    validateattributes(num_cpu, {'numeric'}, {'scalar', 'integer', 'positive'}, mfilename, 'num_cpu');
 
     mf = fullfile('.', 'Makefile');
-    fid = fopen(mf, 'w');
-    if fid == -1
-        error('Cannot open "%s" for writing.', mf);
-    end
+    [fid, cleaner] = open_text_file_for_write(mf);
 
     % ---- File content ----
     fprintf(fid, '# Just type: make\n');
@@ -70,6 +68,6 @@ function generate_makefile(num_cpu)
     fprintf(fid, 'nhmg:\n');
     fprintf(fid, '\tcd $(ROMS_ROOT)/NHMG/src; make clean; cd .. ; make\n\n');
 
-    fclose(fid);
+    clear cleaner;
     fprintf('Makefile written in current directory with -j%d\n', num_cpu);
 end

@@ -3,10 +3,7 @@ function generate_cppdefs_channel(filename)
         filename = 'cppdefs.opt';
     end
 
-    fid = fopen(filename, 'w');
-    if fid == -1
-        error('Cannot open "%s" for writing.', filename);
-    end
+    [fid, cleaner] = open_text_file_for_write(filename);
 
     % ===== Header you requested =====
     fprintf(fid, '/* This is "cppdefs.opt": MODEL CONFIGURATION FILE\n');
@@ -80,6 +77,6 @@ function generate_cppdefs_channel(filename)
     % Include
     fprintf(fid, '#include "set_global_definitions.h"\n');
 
-    fclose(fid);
+    clear cleaner;
     fprintf('cppdefs.opt written to "%s"\n', filename);
 end

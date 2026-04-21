@@ -1,15 +1,19 @@
 function generate_forcing_config(interp_frc, filename)
+    if nargin < 1
+        error('interp_frc is required.');
+    end
     if nargin < 2
         filename = 'flux_frc.opt';
     end
 
-    fid = fopen(filename, 'w');
+    validateattributes(interp_frc, {'numeric', 'logical'}, {'scalar'}, mfilename, 'interp_frc');
+    [fid, cleaner] = open_text_file_for_write(filename);
 
     fprintf(fid, '      ! ****************************************************************\n');
     fprintf(fid, '      ! User inputs\n\n');
 
     % Interpolation flag
-    fprintf(fid, '      integer     :: interp_frc = %d   ! interpolate forcing from coarser input grid (=1) or not (=0). factor 2 only for now\n\n', interp_frc);
+    fprintf(fid, '      integer     :: interp_frc = %d   ! interpolate forcing from a coarser input grid (=1) or not (=0); factor 2 only for now\n\n', interp_frc);
 
     % Surface momentum stress
     fprintf(fid, '      type (ncforce) :: nc_sustr  = ncforce(vname=''sustr'', tname=''frc_time'')  ! sustr - surface u-momentum stress flux (input data in N/m^2)\n');
@@ -23,6 +27,6 @@ function generate_forcing_config(interp_frc, filename)
     fprintf(fid, '      ! End of user inputs\n');
     fprintf(fid, '      ! ****************************************************************\n');
 
-    fclose(fid);
+    clear cleaner;
     fprintf('Forcing config file written to "%s"\n', filename);
 end

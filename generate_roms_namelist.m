@@ -4,13 +4,13 @@ function generate_roms_namelist(...
     filename)
 
     if nargin < 12
-        error('All 11 arguments are required.');
+        error('Twelve inputs are required before the optional filename.');
     end
     if nargin < 13
         filename = 'neptune.in';
     end
 
-    fid = fopen(filename, 'w');
+    [fid, cleaner] = open_text_file_for_write(filename);
 
     % Title
     fprintf(fid, 'title:\n');
@@ -69,7 +69,7 @@ function generate_roms_namelist(...
     fprintf(fid, 'lin_rho_eos:  Tcoef    T0    Scoef   S0\n');
     fprintf(fid, '              %.2f   %.1f   %.1f  %.1f\n', Tcoef, T0, Scoef, S0);
 
-    fclose(fid);
+    clear cleaner;
 
     fprintf('ROMS namelist file written to "%s"\n', filename);
 end

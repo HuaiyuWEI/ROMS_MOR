@@ -5,15 +5,24 @@ function generate_run_script(num_nodes, account_name, user_name, filename, targe
     %   generate_run_script(node_num, account, user_name)
     %
     % Optional:
-    %   generate_run_script(node_num, account, user_name, 'run_roms_auto', 2009)
+    %   generate_run_script(node_num, account, user_name, 'run_roms_auto', 2035)
 
     if nargin < 4 || isempty(filename)
         filename = 'run_roms_auto';
     end
 
-    if nargin < 5 || isempty(target_year)
-        target_year = 2009;
+    if nargin < 2 || isempty(account_name)
+        account_name = '';
     end
+
+    if nargin < 3 || isempty(user_name)
+        user_name = '';
+    end
+
+    if nargin < 5 || isempty(target_year)
+        target_year = 2035;
+    end
+    validateattributes(num_nodes, {'numeric'}, {'scalar', 'integer', 'positive'}, mfilename, 'num_nodes');
 
     if isnumeric(target_year)
         target_year_text = sprintf('%04d', target_year);
@@ -27,11 +36,7 @@ function generate_run_script(num_nodes, account_name, user_name, filename, targe
 
     num_tasks = num_nodes * 128;
 
-    fid = fopen(filename, 'w');
-    if fid < 0
-        error('Could not open "%s" for writing.', filename);
-    end
-    cleaner = onCleanup(@() fclose(fid));
+    [fid, cleaner] = open_text_file_for_write(filename);
 
     write_line(fid, '#!/bin/bash');
     write_line(fid, '#SBATCH --job-name="roms_auto"');
@@ -44,7 +49,11 @@ function generate_run_script(num_nodes, account_name, user_name, filename, targe
     fprintf(fid, '#SBATCH --nodes=%d\n\n', num_nodes);
     write_line(fid, '# Request number of cores (Expanse has 128 cores per node)');
     write_line(fid, '#SBATCH --ntasks-per-node=128');
-    fprintf(fid, '#SBATCH --account=%s\n', account_name);
+    if ~isempty(account_name)
+        fprintf(fid, '#SBATCH --account=%s\n', account_name);
+    else
+        write_line(fid, '##SBATCH --account=<set-your-account-if-required>');
+    end
     write_line(fid, '#SBATCH --export=ALL');
     write_line(fid, '');
     write_line(fid, '# Max run time is 48 hours. Ask Slurm for a signal before the limit so the');
@@ -53,8 +62,12 @@ function generate_run_script(num_nodes, account_name, user_name, filename, targe
     write_line(fid, '#SBATCH --signal=B:USR1@600');
     write_line(fid, '');
     write_line(fid, '# Email notifications:');
-    fprintf(fid, '#SBATCH --mail-user=%s\n', user_name);
-    write_line(fid, '#SBATCH --mail-type=ALL');
+    if ~isempty(user_name)
+        fprintf(fid, '#SBATCH --mail-user=%s\n', user_name);
+        write_line(fid, '#SBATCH --mail-type=ALL');
+    else
+        write_line(fid, '# Email notifications disabled. Set user_name in MATLAB to enable them.');
+    end
     write_line(fid, '');
     write_line(fid, '#-----------------------------------------------------------------');
     write_line(fid, '');
@@ -342,6 +355,9 @@ function generate_run_script(num_nodes, account_name, user_name, filename, targe
     write_line(fid, 'fi');
 
     clear cleaner
+    if isunix || ismac
+        fileattrib(filename, '+x', 'a');
+    end
 
     fprintf('Auto-restarting SLURM batch script written to "%s"\n', filename);
 end

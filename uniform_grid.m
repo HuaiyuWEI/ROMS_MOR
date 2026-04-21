@@ -47,6 +47,11 @@ function G = uniform_grid (dx,dy,L,M)
 %=========================================================================%
 
 % Initialize.
+
+validateattributes(dx, {'numeric'}, {'scalar', 'real', 'positive'}, mfilename, 'dx');
+validateattributes(dy, {'numeric'}, {'scalar', 'real', 'positive'}, mfilename, 'dy');
+validateattributes(L, {'numeric'}, {'scalar', 'integer', 'positive'}, mfilename, 'L');
+validateattributes(M, {'numeric'}, {'scalar', 'integer', 'positive'}, mfilename, 'M');
   
 Lr = L+1;   Mr = M+1;
 Lu = L;     Mu = M+1;
