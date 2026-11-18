@@ -35,8 +35,6 @@ resubmission stops).
    `generated_experiments/` when the preferred root was unavailable).
 3. Copy the directory to the cluster and submit `run_roms_auto` with `sbatch`.
 
-The generator changes MATLAB's working directory to the experiment directory.
-
 ## Cluster Configuration
 
 The cluster-related files are tailored for the [Expanse cluster](https://www.sdsc.edu/systems/expanse/user_guide.html) at UC San Diego (UCSD).
