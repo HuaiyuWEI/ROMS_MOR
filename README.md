@@ -13,7 +13,7 @@ branch). An experiment directory holds:
 ## Entry points
 
 - `NewExp_Neptune_ridge.m`: generates one 3-D ridge experiment. 
-- `run_ridge_ensemble.m`: generates a set of one-at-a-time perturbation
+- `run_ridge_ensemble.m`: generates a set of perturbation
   experiments through the generator. 
 - `NewExp_Neptune_ridge_2D.m`: generates a 2-D (along-ridge-uniform) run
   from an existing 3-D experiment, with zero wind stress and the vertical
