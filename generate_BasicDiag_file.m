@@ -22,7 +22,8 @@ function generate_BasicDiag_file(...
     % Restart File Output
     fprintf(fid, '      logical,parameter :: wrt_file_rst      = .%s.\n', tfstr(wrt_rst));
     fprintf(fid, '      real,parameter    :: output_period_rst = %d\n', per_rst);
-    fprintf(fid, '      integer,parameter :: nrpf_rst          = %d\n\n', nrpf_rst);
+    fprintf(fid, '      integer,parameter :: nrpf_rst          = %d\n', nrpf_rst);
+    fprintf(fid, '      logical,parameter :: monthly_restarts  = .false.      ! This overrides output_period\n\n');
 
     % History File Output
     fprintf(fid, '      logical,parameter :: wrt_file_his      = .%s.\n', tfstr(wrt_his));

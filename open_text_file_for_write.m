@@ -1,5 +1,8 @@
 function [fid, cleaner] = open_text_file_for_write(filename)
-%OPEN_TEXT_FILE_FOR_WRITE Open a text file for writing with clearer errors.
+%OPEN_TEXT_FILE_FOR_WRITE Open a text file for writing.
+%   [FID, CLEANER] = OPEN_TEXT_FILE_FOR_WRITE(FILENAME) creates the parent
+%   directory when needed, raises an error when the file cannot be opened,
+%   and returns an onCleanup object that closes FID.
 
     [parent_dir, ~, ~] = fileparts(filename);
     if ~isempty(parent_dir) && exist(parent_dir, 'dir') ~= 7

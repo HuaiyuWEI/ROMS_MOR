@@ -1,13 +1,23 @@
 function generate_MoreDiag_file( ...
     diag_avg, output_period, nrpf, ...
     diag_uv, diag_trc, diag_pflx, ...
-    filename)
+    diag_norm, filename)
 
     if nargin < 6
-        error('Six inputs are required before the optional filename.');
+        error('Six inputs are required before the optional diag_norm, filename.');
     end
-    if nargin < 7 || isempty(filename)
+    if nargin < 8 || isempty(filename)
         filename = 'diagnostics.opt';
+    end
+    if nargin >= 7 && (ischar(diag_norm) || isstring(diag_norm))
+        filename = char(diag_norm);   % the file name may also be given as 7th argument
+        diag_norm = [];
+    end
+    if nargin < 7 || isempty(diag_norm)
+        % false = dz-integrated momentum terms (m^2/s^2); true = the same
+        % terms divided by dz (m/s^2). The energy_budget module requires
+        % diag_norm = true.
+        diag_norm = false;
     end
 
     % Ensure logicals
@@ -15,6 +25,7 @@ function generate_MoreDiag_file( ...
     diag_uv  = logical(diag_uv);
     diag_trc = logical(diag_trc);
     diag_pflx= logical(diag_pflx);
+    diag_norm= logical(diag_norm);
 
     % Map logical -> Fortran logical string
     tf = {'.false.','.true.'};
@@ -38,13 +49,15 @@ function generate_MoreDiag_file( ...
     fprintf(fid, '      !     1) need DIAGNOSTICS flag in cppdefs.opt\n');
     fprintf(fid, '      !     2) units are du/dt*dz - m^2/s^2 (or v/w/tracer) - i.e. vertically integrated in cell\n');
     fprintf(fid, '      !     3) if tracer diagnostics required set diag_trc==T,\n');
-    fprintf(fid, '      !        select which tracers you want in wrt_t_diag array in tracers.opt\n');
+    fprintf(fid, '      !        select which tracers you want in wrt_t_dia array in tracers.opt\n');
     fprintf(fid, '      !     4) for an example try Examples/Diagnostics/\n');
     fprintf(fid, '      !     5) averaging frequency = rec_rate * time_step\n');
     fprintf(fid, '      !        averaging is expensive and will likely slow your simulation by 30-40%%\n');
     fprintf(fid, '      !        with u, v, temp and salinity diagnostics.\n');
     fprintf(fid, '      !     6) history (snap-shot) diagnostics is relatively inexpensive.\n\n');
 
+    fprintf(fid, '      ! normalization should typically be on for 3d budgets and off for vertically integrated versions\n');
+    fprintf(fid, '      logical, parameter, public :: diag_norm     = %s   ! Normalization of diagnostic terms\n\n', tfstr(diag_norm));
     fprintf(fid, '      logical, parameter         :: diag_avg      = %s    ! compute history (=F) or averages (=T)\n', tfstr(diag_avg));
     fprintf(fid, '      integer, parameter         :: output_period =  %d       ! output period\n', output_period);
     fprintf(fid, '      integer, parameter         :: nrpf          =  %d        ! total recs per file\n\n', nrpf);
@@ -55,8 +68,11 @@ function generate_MoreDiag_file( ...
 
     fprintf(fid, '      real,    parameter         :: timescale     = %d ! timescale for filtering (in seconds)\n\n', 24*3600);
 
-    % If you truly want an identifier, not a string, keep %s with bare text:
+    % nf90_double is written as a bare identifier, not as a quoted string
     fprintf(fid, '      integer, parameter         :: diag_prec     = %s ! Precision of output variables (nf90_float/nf90_double)\n\n', 'nf90_double');
+
+    fprintf(fid, '      !  If diag_trc=.true., select for which tracers diagnostics are desired:\n');
+    fprintf(fid, '      !  Set wrt_t_dia(...) in tracers.opt.\n\n');
 
     fprintf(fid, '      ! End of user inputs\n');
     fprintf(fid, '      ! ***************************************************************\n');

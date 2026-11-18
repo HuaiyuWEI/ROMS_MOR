@@ -1,11 +1,33 @@
-function generate_cppdefs(filename)
-    if nargin < 1 || isempty(filename)
+function generate_cppdefs(enable_tnudg, enable_uvnudg, enable_convec, filename)
+    if nargin < 1 || isempty(enable_tnudg)
+        enable_tnudg = false;
+    end
+    if nargin < 2 || isempty(enable_uvnudg)
+        enable_uvnudg = false;
+    end
+    if nargin < 3 || isempty(enable_convec)
+        enable_convec = true;   % LMD_CONVEC on unless the experiment says otherwise
+    end
+
+    if ischar(enable_tnudg) || isstring(enable_tnudg)
+        filename = enable_tnudg;
+        enable_tnudg = false;
+        enable_uvnudg = false;
+        enable_convec = true;
+    elseif ischar(enable_uvnudg) || isstring(enable_uvnudg)
+        filename = enable_uvnudg;
+        enable_uvnudg = false;
+        enable_convec = true;
+    elseif ischar(enable_convec) || isstring(enable_convec)
+        filename = enable_convec;
+        enable_convec = true;
+    elseif nargin < 4 || isempty(filename)
         filename = 'cppdefs.opt';
     end
 
     [fid, cleaner] = open_text_file_for_write(filename);
 
-    % ===== Header you requested =====
+    % Header
     fprintf(fid, '/* This is "cppdefs.opt": MODEL CONFIGURATION FILE\n');
     fprintf(fid, '   ==== == ============ ===== ============= ==== */\n\n');
     fprintf(fid, '/*\n');
@@ -15,7 +37,6 @@ function generate_cppdefs(filename)
     % Primary flag
     fprintf(fid, '#define NEPTUNE_IDEAL\n\n');
 
-   
     % Start block
     fprintf(fid, '#if defined NEPTUNE_IDEAL\n\n');
 
@@ -27,11 +48,19 @@ function generate_cppdefs(filename)
     fprintf(fid, '# define ADV_ISONEUTRAL\n');
     fprintf(fid, '# define DIAGNOSTICS\n\n');
 
-    fprintf(fid, '# undef TNUDG_Huaiyu\n\n');
-    fprintf(fid, '# undef UVNUDG_Huaiyu\n\n');
-    fprintf(fid, '# define ignore_leap\n\n');
+    if enable_tnudg
+        fprintf(fid, '# define TNUDG_Huaiyu\n\n');
+    else
+        fprintf(fid, '# undef TNUDG_Huaiyu\n\n');
+    end
+
+    if enable_uvnudg
+        fprintf(fid, '# define UVNUDG_Huaiyu\n\n');
+    else
+        fprintf(fid, '# undef UVNUDG_Huaiyu\n\n');
+    end
     fprintf(fid, '/* # undef SPONGE */\n\n');
-    
+
     % Equation of State (commented out)
     fprintf(fid, '        /* Equation of State */\n');
     fprintf(fid, '/* # define NONLIN_EOS */\n');
@@ -49,7 +78,11 @@ function generate_cppdefs(filename)
     fprintf(fid, '# define LMD_KPP\n');
     fprintf(fid, '# define LMD_NONLOCAL\n');
     fprintf(fid, '# define LMD_RIMIX\n');
-    fprintf(fid, '# define LMD_CONVEC\n');
+    if enable_convec
+        fprintf(fid, '# define LMD_CONVEC\n');
+    else
+        fprintf(fid, '# undef LMD_CONVEC\n');
+    end
     fprintf(fid, '# define LMD_BKPP\n\n');
 
     % Grid configuration
@@ -63,9 +96,7 @@ function generate_cppdefs(filename)
     fprintf(fid, '# define NS_PERIODIC\n');
     fprintf(fid, '# define EW_PERIODIC\n\n');
 
-    % Output & Restart
-    fprintf(fid, '        /* Output Options */\n');
-    fprintf(fid, '# define MASK_LAND_DATA\n\n');
+    % Restart
     fprintf(fid, '        /* Restart */\n');
     fprintf(fid, '# define EXACT_RESTART\n\n');
 

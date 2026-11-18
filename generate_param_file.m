@@ -8,6 +8,11 @@ function generate_param_file(LLm, MMm, N, NP_XI, NP_ETA, NSUB_X, NSUB_E, nt, nt_
 
     validateattributes([LLm, MMm, N, NP_XI, NP_ETA, NSUB_X, NSUB_E, nt, nt_passive], ...
         {'numeric'}, {'integer', 'nonnegative'}, mfilename);
+    if nt < 2
+        error(['nt must be >= 2 for the development-branch ROMS: temp and ', ...
+            'salt are unconditional core tracers (init_tracers writes ', ...
+            't_vname(isalt) etc., which corrupts memory when nt = 1).']);
+    end
     [fid, cleaner] = open_text_file_for_write(filename);
 
     fprintf(fid, '! Parameter options file\n\n');
@@ -25,7 +30,7 @@ function generate_param_file(LLm, MMm, N, NP_XI, NP_ETA, NSUB_X, NSUB_E, nt, nt_
 
     fprintf(fid, '! Number of tracers\n');
     fprintf(fid, '!------- -----------\n');
-    fprintf(fid, '! nt  must be 2 or more if Salinity is defined\n\n');
+    fprintf(fid, '! nt >= 2 always: temp and salt are both core tracers\n\n');
 
     fprintf(fid, '      integer, parameter :: LLm=%d, MMm=%d, N=%d\n\n', LLm, MMm, N);
     fprintf(fid, '      integer, parameter :: NP_XI  = %d, NP_ETA = %d\n', NP_XI, NP_ETA);

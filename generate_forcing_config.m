@@ -21,8 +21,14 @@ function generate_forcing_config(interp_frc, filename)
 
     % Surface heat and freshwater fluxes
     fprintf(fid, '      type (ncforce) :: nc_shflx  = ncforce(vname=''shflux'', tname=''frc_time'')  ! stflx(itemp) - surface heat flux (input data in W/m^2)\n');
-    fprintf(fid, '      type (ncforce) :: nc_swflux = ncforce(vname=''swflux'', tname=''frc_time'')  ! stflx(isalt) - surface freshwater flux (input data in cm/day). Might want to use #if def SALINITY?\n');
+    fprintf(fid, '      type (ncforce) :: nc_swflux = ncforce(vname=''swflux'', tname=''frc_time'')  ! stflx(isalt) - surface freshwater flux (input data in cm/day)\n');
     fprintf(fid, '      type (ncforce) :: nc_swrad  = ncforce(vname=''swrad'', tname=''frc_time'')  ! swrad - surface short-wave radiation flux (input data in W/m^2)\n\n');
+
+    % Flux options that the model requires in flux_frc.opt; all are off
+    fprintf(fid, '      logical,parameter :: diurnal_srflux  = .false.  ! Diurnal modulation of short-wave radiation\n');
+    fprintf(fid, '      logical,parameter :: qcorrection     = .false.  ! No SST restoring\n');
+    fprintf(fid, '      logical,parameter :: sflx_correction = .false.  ! No SSS restoring\n');
+    fprintf(fid, '      logical,parameter :: sea_ice_noflux  = .false.  ! No poor man''s sea ice\n\n');
 
     fprintf(fid, '      ! End of user inputs\n');
     fprintf(fid, '      ! ****************************************************************\n');

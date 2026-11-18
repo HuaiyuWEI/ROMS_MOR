@@ -1,8 +1,10 @@
 function config = newexp_defaults(script_path)
-%NEWEXP_DEFAULTS Shared defaults for the public NewExp_Expanse scripts.
-%   CONFIG = NEWEXP_DEFAULTS(SCRIPT_PATH) returns a struct with portable
-%   path defaults and optional cluster metadata used by the experiment
-%   generators in this folder.
+%NEWEXP_DEFAULTS Settings shared by the experiment generators.
+%   CONFIG = NEWEXP_DEFAULTS(SCRIPT_PATH) returns a struct with the output
+%   roots, optional helper paths and cluster settings. SCRIPT_PATH is the
+%   full path of the calling script (default: this file); the fallback
+%   output root is placed in its folder. The values are the author's;
+%   change them before use.
 
     if nargin < 1 || isempty(script_path)
         script_path = mfilename('fullpath');
@@ -15,23 +17,26 @@ function config = newexp_defaults(script_path)
     config.script_dir = script_dir;
     config.project_root = project_root;
 
-    % Prefer the original local experiment root when it is available, and
-    % fall back to a package-local folder for portable public use.
-    config.preferred_output_root = 'E:\Data_ROMS\Neptune';
+    % Experiment directories go to preferred_output_root and, when that
+    % cannot be created or is not writable, to generated_experiments/ in
+    % this folder.
+    config.preferred_output_root = 'E:\Data_ROMS\Neptune_ridge';
     config.fallback_output_root = fullfile(script_dir, 'generated_experiments');
 
-    % Optional helper/toolbox paths. Leave roms_tools_dir empty if those
-    % utilities are already on your MATLAB path or are not needed.
+    % Optional folders added to the MATLAB path; empty when not needed.
     config.roms_tools_dir = '';
-    config.postprocess_dir = fullfile(project_root, 'PostProcess_2026');
+    config.postprocess_dir = fullfile(project_root, 'analysis_ridge');
 
-    % Optional SLURM metadata. Leave blank to omit those directives in the
-    % generated submission scripts and edit them manually on your cluster.
+    % SLURM account and mail address; empty values leave those directives
+    % out of the generated scripts.
     config.slurm_account = 'cla327';
     config.slurm_email = 'hwei1';
 
-    % Resolve the actual output root now so callers do not need a separate
-    % helper script for this decision.
+    % Path of the ucla-roms (development branch) clone on the cluster; the
+    % generated run script exports it as ROMS_ROOT before compiling.
+    config.roms_root = '~/work2026/ucla-roms-dev';
+
+    % Take the first root that exists or can be created, and is writable.
     config.output_root = resolve_output_root( ...
         config.preferred_output_root, config.fallback_output_root);
 end
@@ -42,6 +47,13 @@ function output_root = resolve_output_root(preferred_output_root, fallback_outpu
     for i = 1:numel(candidates)
         candidate = candidates{i};
         if isempty(candidate)
+            continue
+        end
+
+        % On Unix, a Windows drive-letter path is a valid relative name;
+        % skip it explicitly instead of creating a literal "E:\..." folder.
+        if ~ispc && ~isempty(regexp(candidate, '^[A-Za-z]:[\\/]', 'once'))
+            warning('Output root "%s" is not valid on this platform.', candidate);
             continue
         end
 

@@ -1,6 +1,5 @@
 function generate_makefile(num_cpu)
 %GENERATE_MAKEFILE Generate a ROMS Makefile in the current directory.
-% Generate a Makefile in the current directory.
 % num_cpu = number of parallel workers for "make -j" (default = 6)
 
     if nargin < 1 || isempty(num_cpu)
@@ -25,23 +24,19 @@ function generate_makefile(num_cpu)
     fprintf(fid, '.PHONY: all clean depend\n\n');
 
     fprintf(fid, 'all:\n');
-    fprintf(fid, '#\tln -s $(ROMS_ROOT)/Examples/Neptune_input 2>/dev/null || :\n');
     fprintf(fid, '#\tln -s $(ROMS_ROOT)/Examples/input_data 2>/dev/null || :\n');
     fprintf(fid, '\trsync -a $(ROMS_ROOT)/src/*.F $(ROMS_ROOT)/src/*.h  Compile\n');
     fprintf(fid, '\tmake show_tag\n');
     fprintf(fid, '\t@rsync -a $(ROMS_ROOT)/src/*.opt Compile\n');
-    fprintf(fid, '\t@rsync -a $(ROMS_ROOT)/src/Makedefs.inc Compile\n');
     fprintf(fid, '\t@rsync -a $(ROMS_ROOT)/src/Make.depend Compile\n');
     fprintf(fid, '\t@rsync -a $(ROMS_ROOT)/src/Makefile Compile\n');
     fprintf(fid, '\t@rm Compile/*.f 2>/dev/null || :\n');
-    fprintf(fid, '\tcp ../../Work/*.F ./Compile 2>/dev/null || :\n');
-    fprintf(fid, '\tcp ../../Work/*.h ./Compile 2>/dev/null || :\n');
-    fprintf(fid, '\tcp ../../Work/*.opt ./Compile 2>/dev/null || :\n');
-    fprintf(fid, '\tcp -p *.h *.F *.opt Makedefs.inc Compile 2>/dev/null || :\n');
-    fprintf(fid, '\tcd Compile; make depend 2>/dev/null || :\n');
-    fprintf(fid, '\tcd Compile; make -j%d; mv roms ..\n\n', num_cpu);
+    fprintf(fid, '\tcp -p *.h *.F *.opt Compile 2>/dev/null || :\n');
+    fprintf(fid, '\tcd Compile && make depend 2>/dev/null || :\n');
+    fprintf(fid, '\trm -f Compile/roms roms\n');
+    fprintf(fid, '\tcd Compile && make -j%d && test -f roms && mv roms ..\n\n', num_cpu);
 
-    fprintf(fid, 'tag := $(shell git rev-parse HEAD)\n');
+    fprintf(fid, 'tag := $(shell git --git-dir $(ROMS_ROOT)/.git rev-parse HEAD)\n');
     fprintf(fid, 'tline1 := git_hash=\n');
     fprintf(fid, 'tline2:= ''git_hash=\\"$(tag)\\"''\n');
     fprintf(fid, 'show_tag:\n');
@@ -62,9 +57,6 @@ function generate_makefile(num_cpu)
     fprintf(fid, '\t@cd $(ROMS_ROOT)/Examples/Tracers_passive ; make compile_clean\n');
     fprintf(fid, '\t@cd $(ROMS_ROOT)/Examples/WEC_real        ; make compile_clean\n');
     
-    fprintf(fid, 'copy_to_Work_dir:\n');
-    fprintf(fid, '\tcp -p *.F *.h *.in *.sh ../../Work 2>/dev/null || :\n\n');
-
     fprintf(fid, 'nhmg:\n');
     fprintf(fid, '\tcd $(ROMS_ROOT)/NHMG/src; make clean; cd .. ; make\n\n');
 
