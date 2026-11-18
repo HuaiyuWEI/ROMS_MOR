@@ -43,5 +43,4 @@ Obtaining computational hours on Expanse is relatively straightforward by applyi
 
 ##  Resources
 
-- Additional UCLA-ROMS tools are available at:  
-  👉 [https://github.com/nmolem/ucla-tools](https://github.com/nmolem/ucla-tools)
+Additional UCLA-ROMS tools are available at:[https://github.com/nmolem/ucla-tools](https://github.com/nmolem/ucla-tools)
